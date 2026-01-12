@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jax-Bot Platform</title>
+    <meta name="description" content="Personal automation with a Telegram chatbot and web UI. Tasks, habits, vehicles, notes, budgets. Extensible with your own modules.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #242424;
+            --text-primary: #e0e0e0;
+            --text-secondary: #c8c8c8;
+            --text-muted: #999999;
+            --border-color: #333333;
+            --accent: #e67e22;
+            --accent-hover: #d35400;
+            --color-ok: #2ecc71;
+            --color-warn: #f1c40f;
+            --color-info: #3498db;
+            --accent-rgb: 230, 126, 34;
+            --shadow-rgb: 0, 0, 0;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f4f4f4;
+            --bg-tertiary: #eaeaea;
+            --text-primary: #111111;
+            --text-secondary: #444444;
+            --text-muted: #666666;
+            --border-color: #d0d0d0;
+            --accent: #d35400;
+            --accent-hover: #b94a00;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.6;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-weight: bold;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+
+        .brand:hover {
+            color: var(--accent);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            color: var(--accent);
+        }
+
+        .theme-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .theme-btn:hover {
+            color: var(--accent);
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 2rem 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 3rem 0 2rem;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .hero-title .accent {
+            color: var(--accent);
+        }
+
+        .hero-tagline {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 24px rgba(var(--shadow-rgb), 0.12);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .feature-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 1.25rem;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-title .bullet {
+            color: var(--accent);
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Chat Demo */
+        .chat-demo {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .chat-demo-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .chat-demo-title {
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .message-row {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .message-row:last-child {
+            border-bottom: none;
+        }
+
+        .message-rail {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 0.5rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .message-rail-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .message-role {
+            font-weight: 600;
+        }
+
+        .message-role-user { color: var(--color-info); }
+        .message-role-assistant { color: var(--color-ok); }
+        .message-role-tool { color: var(--color-warn); }
+
+        .message-time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .message-meta {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        .message-body {
+            padding: 0.65rem 0.85rem;
+            position: relative;
+            font-size: 0.85rem;
+        }
+
+        .message-user .message-body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--color-info);
+        }
+
+        .message-assistant .message-body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--color-ok);
+        }
+
+        .message-tool .message-body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--color-warn);
+        }
+
+        .tool-call-box {
+            background: var(--bg-tertiary);
+            border: 1px dashed var(--border-color);
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .tool-call-name {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .tool-call-args {
+            color: var(--text-secondary);
+        }
+
+        .tool-result {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .message-row {
+                grid-template-columns: 1fr;
+            }
+            .message-rail {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        /* Capability cards */
+        .capability-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .capability-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .capability-title .bullet {
+            color: var(--accent);
+        }
+
+        .capability-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .capability-examples {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .hint {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .hint code {
+            background: var(--bg-tertiary);
+            padding: 0.1rem 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        /* Tech Grid */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .tech-item {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+        }
+
+        .tech-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+        }
+
+        .tech-value {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Bottom CTA */
+        .bottom-cta {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .bottom-cta p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .bottom-cta .btn-primary {
+            padding: 0.75rem 2rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.5rem 1rem;
+            }
+
+            .header-right {
+                gap: 0.75rem;
+            }
+
+            .hero {
+                padding: 2rem 0 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 1.8rem;
+            }
+
+            .hero-tagline {
+                font-size: 0.95rem;
+            }
+
+            .hero-actions {
+                gap: 0.5rem;
+            }
+
+            .hero-actions .btn {
+                padding: 0.5rem 0.9rem;
+                font-size: 0.85rem;
+            }
+
+            .main {
+                padding: 1.5rem 1rem;
+            }
+
+            .section {
+                margin-bottom: 2rem;
+            }
+
+            .section-header {
+                font-size: 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <a href="/" class="brand">jax-bot</a>
+            <div class="header-right">
+                <a href="https://github.com/Jax-Platform/jax-bot-platform" class="nav-link">[github]</a>
+                <button class="theme-btn" onclick="toggleTheme()">[theme]</button>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="hero">
+                <h1 class="hero-title">jax<span class="accent">-</span>bot</h1>
+                <p class="hero-tagline">
+                    Personal automation with two interfaces: a Telegram chatbot and a web UI. Manage tasks, habits, vehicles, notes, and budgets. Chat or click, your data stays in sync.
+                </p>
+                <div class="hero-actions">
+                    <a href="https://github.com/Jax-Platform/jax-bot-platform" class="btn btn-primary">[view on github]</a>
+                    <a href="#features" class="btn">[features]</a>
+                    <a href="#modules" class="btn">[modules]</a>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <p style="color: var(--text-secondary); font-size: 1rem; max-width: 700px; margin: 0 auto;">
+                        Add a task via chat, review your vehicle service history in the browser, then ask the bot "what's due this week?" and it pulls from everything.
+                    </p>
+                </div>
+            </section>
+
+            <section id="features" class="section">
+                <h2 class="section-header">* Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Telegram Chatbot</div>
+                        <p class="feature-desc">Chat naturally. The LLM calls functions from your modules to create tasks, search notes, check budgets, or look things up.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Web UI</div>
+                        <p class="feature-desc">Browse and edit your data directly. Vehicle logs, wiki pages, budget history, chat threads, settings, and module config.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Daily Summaries</div>
+                        <p class="feature-desc">Morning briefings delivered to Telegram. Tasks, habits, weather, and what needs attention today.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Voice + Photos</div>
+                        <p class="feature-desc">Send voice messages (Whisper transcription) and photos (vision model). Media stored and viewable in the UI.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Multi-Bot</div>
+                        <p class="feature-desc">Run isolated bot instances. Share a bot with family for groceries, keep finances on a private one. Separate databases, no cross-access.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Extensible</div>
+                        <p class="feature-desc">Modules are folders with a manifest. They define database tables, commands, API routes, UI pages, and scheduled jobs.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="modules" class="section">
+                <h2 class="section-header">* How It Works</h2>
+                <p class="hint" style="margin-bottom: 1.5rem;">
+                    You chat with the bot in Telegram. The LLM sees your message and the available tools. It decides what to call, executes the function, and responds with the result.
+                </p>
+
+                <div class="chat-demo">
+                    <div class="chat-demo-header">
+                        <span class="chat-demo-title">THREAD #42</span>
+                        <span style="color: var(--text-muted);">3 messages</span>
+                    </div>
+                    <div class="message-row message-user">
+                        <div class="message-rail">
+                            <div class="message-rail-top">
+                                <span class="message-role message-role-user">[user]</span>
+                                <span class="message-time">09:15:03</span>
+                            </div>
+                        </div>
+                        <div class="message-body">
+                            Add a task to buy groceries tomorrow
+                        </div>
+                    </div>
+                    <div class="message-row message-assistant">
+                        <div class="message-rail">
+                            <div class="message-rail-top">
+                                <span class="message-role message-role-assistant">[assistant]</span>
+                                <span class="message-time">09:15:04</span>
+                            </div>
+                            <div class="message-meta">~85 tokens</div>
+                        </div>
+                        <div class="message-body">
+                            I'll create that task for you.
+                            <div class="tool-call-box">
+                                <div class="tool-call-name">create_task</div>
+                                <div class="tool-call-args">title: "Buy groceries"<br>due_date: "2025-01-13"</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="message-row message-tool">
+                        <div class="message-rail">
+                            <div class="message-rail-top">
+                                <span class="message-role message-role-tool">[tool]</span>
+                                <span class="message-time">09:15:05</span>
+                            </div>
+                        </div>
+                        <div class="message-body">
+                            <span class="tool-result">Task created: "Buy groceries" due Jan 13 in Inbox</span>
+                        </div>
+                    </div>
+                    <div class="message-row message-assistant">
+                        <div class="message-rail">
+                            <div class="message-rail-top">
+                                <span class="message-role message-role-assistant">[assistant]</span>
+                                <span class="message-time">09:15:05</span>
+                            </div>
+                        </div>
+                        <div class="message-body">
+                            Done. I've added "Buy groceries" to your Inbox, due tomorrow.
+                        </div>
+                    </div>
+                </div>
+
+                <p class="hint" style="margin-top: 1rem; margin-bottom: 2rem;">
+                    The <code>create_task</code> tool comes from the TickTick module. The chat module discovers it automatically because the module called <code>self.expose("create_task", ...)</code> on startup.
+                </p>
+            </section>
+
+            <section class="section">
+                <h2 class="section-header">* Included Modules</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Tasks &amp; Habits</div>
+                        <p class="feature-desc">TickTick sync, habit tracking with streaks. Chat to add tasks, UI to review.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Vehicles</div>
+                        <p class="feature-desc">Fuel logs, maintenance, mods, legal docs. Manage in UI, query via chat.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Wiki &amp; Notes</div>
+                        <p class="feature-desc">Markdown pages with backlinks. usememos.com integration. Full-text search.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Budgets</div>
+                        <p class="feature-desc">Monthly tracking, subscriptions, debts. Multi-currency. Browse in UI, ask totals in chat.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Web Search</div>
+                        <p class="feature-desc">DuckDuckGo + URL fetch as LLM tools. Bot looks things up mid-conversation.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-title"><span class="bullet">*</span> Scheduling</div>
+                        <p class="feature-desc">Cron jobs, reminders, recurring messages. Daily summaries delivered to Telegram.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-header">* Build Your Own</h2>
+                <div class="card">
+                    <p class="feature-desc" style="margin-bottom: 0.75rem;">
+                        A module is a folder with a YAML manifest and Python code. Define database tables, chat commands, UI pages, API routes, and scheduled jobs. Functions you mark as exposed become LLM tools automatically, with schemas generated from type hints.
+                    </p>
+                    <p class="feature-desc">
+                        The included modules are examples. Build what you need: home automation, project tracking, reading lists, workout logs, whatever fits your workflow.
+                    </p>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-header">* Built With</h2>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <div class="tech-label">Backend</div>
+                        <div class="tech-value">Python 3.12+, FastAPI, Jinja2, SQLite via aiosqlite</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">Frontend</div>
+                        <div class="tech-value">HTMX, Alpine.js</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">AI</div>
+                        <div class="tech-value">Groq (LLaMA, Whisper), auto-generated tool schemas</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-label">Telegram</div>
+                        <div class="tech-value">python-telegram-bot, APScheduler, Pydantic</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="bottom-cta">
+                <p>Chat or click. Extend it for your own needs. One platform for personal automation.</p>
+                <a href="https://github.com/Jax-Platform/jax-bot-platform" class="btn btn-primary">View on GitHub</a>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>
+                <a href="https://github.com/Jax-Platform/jax-bot-platform">[github]</a>
+                <span style="margin: 0 0.5rem;">|</span>
+                GPLv2 License
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+</body>
+</html>
